@@ -18,6 +18,12 @@ timestamp = ->
 
 _cache = {}
 
+# at Object.<anonymous> (/Users/zk/play/lincoln/test.js:1:69)
+nodeStackRegex   = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/
+
+# at Object.<anonymous> (/Users/zk/play/lincoln/test.js:1:11, <js>:2:9)
+coffeeStackRegex = /\n  at [^(]+ \((.*):(\d+):(\d+), <js>/
+
 class Console extends winston.transports.Console
   constructor: (options = {}) ->
     options.colorize  ?= process.stdout.isTTY
@@ -36,45 +42,32 @@ class Console extends winston.transports.Console
 
     callback  ?= ->
     metadata  ?= {}
-    err       = null
+    err       = metadata._error
+
+    if err?
+      message = err.message
+
     formatted = @formatMessage message, metadata
+    super level, formatted, metadata, callback
 
-    if message instanceof Error
-      [err, message] = [message, message.toString().replace /^Error: /, '']
+    return unless err? and err.stack
 
-    unless err?
-      return super level, formatted, metadata, callback
+    match = nodeStackRegex.exec err.stack
+    match = coffeeStackRegex.exec err.stack unless match?
 
-    unless err.stack
-      console.error 'Uncaught exception:', err
-      return super level, formatted, metadata, callback
+    if match? and fs.existsSync match[1]
+      position = sourceMap.mapSourcePosition _cache,
+        source: match[1]
+        line:   match[2]
+        column: match[3]
 
-    unless match = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/.exec err.stack
-      return super level, formatted, metadata, callback
+      data = fs.readFileSync position.source, 'utf8'
+      line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
+      if line
+        console.error position.source + ':' + position.line
+        console.error line
+        console.error ((new Array(+position.column)).join ' ') + '^'
 
-    position = sourceMap.mapSourcePosition _cache,
-      source: match[1]
-      line:   match[2]
-      column: match[3]
-
-    done = =>
-      console.error err.stack
-      Console::log.call @, level, message, metadata, callback
-
-    fs.exists position.source, (exists) ->
-      unless exists
-        return done()
-
-      fs.readFile position.source, 'utf8', (err, data) ->
-        return done() if err?
-
-        line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
-
-        if line
-          console.error position.source + ':' + position.line
-          console.error line
-          console.error ((new Array(+position.column)).join ' ') + '^'
-
-        done()
+    console.error err.stack
 
 module.exports = Console
