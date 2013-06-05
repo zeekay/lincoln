@@ -7,7 +7,7 @@ objectRegex = /^Object\.(module\.exports\.)?/
 moduleRegex = /(\w+)\.?(\w+)?:\d/
 
 class Logger extends winston.Logger
-  constructor: (options) ->
+  constructor: (options = {}) ->
     options.exitOnError      ?= false
     options.transports       ?= []
     options.sourceMapSupport ?= true
@@ -50,3 +50,5 @@ class Logger extends winston.Logger
       fn.call @ if env == nodeEnv
     else
       @configure k, v for k,v of env
+
+module.exports = Logger
