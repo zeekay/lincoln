@@ -19,7 +19,6 @@
     "source-map-support": "~0.1.5",
     "raven": "~0.5.1",
     "winston": "~0.7.1",
-    "raw-stacktrace": "0.0.2"
   },
   "devDependencies": {
     "executive": "~0.3.0",
