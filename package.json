@@ -4,7 +4,7 @@
   "description": "presidential logging",
   "main": "lib/",
   "scripts": {
-    "prepublish": "cake build",
+    "prepublish": "cake build:prepublish",
     "test": "cake test"
   },
   "repository": "https://github.com/zeekay/lincoln",

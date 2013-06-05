@@ -19,7 +19,7 @@ timestamp: ->
 _cache = {}
 
 class Console extends winston.transports.Console
-  constructor: (options) ->
+  constructor: (options = {}) ->
     options.colorize  ?= process.stdout.isTTY
     options.timestamp ?= timestamp
     super options
@@ -76,3 +76,5 @@ class Console extends winston.transports.Console
           console.error ((new Array(+position.column)).join ' ') + '^'
 
         done()
+
+module.exports = Console
