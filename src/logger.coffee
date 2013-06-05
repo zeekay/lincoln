@@ -25,7 +25,8 @@ class Logger extends winston.Logger
       error: 3
 
     if options.souceMapSupport
-      require('source-map-support').install handleUncaughtExceptions: false
+      require('source-map-support').install
+        handleUncaughtExceptions: false
 
     super options
 
@@ -38,6 +39,11 @@ class Logger extends winston.Logger
 
     line = (new Error()).stack.split('\n')[3]
 
+    if message instanceof Error
+      error = message
+    else
+      error = null
+
     Object.defineProperties metadata,
       _method:
         get: ->
@@ -46,6 +52,9 @@ class Logger extends winston.Logger
       _module:
         get: ->
           (moduleRegex.exec line)[1]
+        enumerable: false
+      _error:
+        value: error
         enumerable: false
 
     super level, message, metadata, callback
