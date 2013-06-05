@@ -4,6 +4,7 @@
   "description": "...logs.",
   "main": "lib/",
   "scripts": {
+    "prepublish": "cake build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": "https://github.com/zeekay/down",
