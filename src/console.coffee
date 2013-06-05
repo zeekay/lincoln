@@ -1,6 +1,7 @@
-fs        = require 'fs'
-sourceMap = require 'source-map-support'
-winston   = require 'winston'
+fs      = require 'fs'
+winston = require 'winston'
+
+{mapSourcePosition} = require './stacktrace'
 
 pad = (n) ->
   n = n + ''
@@ -15,8 +16,6 @@ timestamp = ->
   min   = pad d.getUTCMinutes()
   sec   = pad d.getUTCSeconds()
   "#{year}-#{month}-#{date} #{hour}:#{min}:#{sec}"
-
-_cache = {}
 
 # at Object.<anonymous> (/Users/zk/play/lincoln/test.js:1:69)
 nodeStackRegex   = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/
@@ -56,7 +55,7 @@ class Console extends winston.transports.Console
     match = coffeeStackRegex.exec err.stack unless match?
 
     if match? and fs.existsSync match[1]
-      position = sourceMap.mapSourcePosition _cache,
+      position = mapSourcePosition
         source: match[1]
         line:   match[2]
         column: match[3]
