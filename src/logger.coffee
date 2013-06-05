@@ -37,11 +37,16 @@ class Logger extends winston.Logger
     metadata ?= {}
 
     line = (new Error()).stack.split('\n')[3]
-    module = (moduleRegex.exec line)[1]
-    method = (methodRegex.exec line)[1].replace objectRegex, ''
 
-    message.method = method
-    message.module = module
+    Object.defineProperties metadata,
+      _method:
+        get: ->
+          (methodRegex.exec line)[1].replace objectRegex, ''
+        enumerable: false
+      _module:
+        get: ->
+          (moduleRegex.exec line)[1]
+        enumerable: false
 
     super level, message, metadata, callback
 

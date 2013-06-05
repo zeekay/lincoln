@@ -2,11 +2,11 @@ fs        = require 'fs'
 sourceMap = require 'source-map-support'
 winston   = require 'winston'
 
-pad: (n) ->
+pad = (n) ->
   n = n + ''
   if n.length >= 2 then n else new Array(2 - n.length + 1).join('0') + n
 
-timestamp: ->
+timestamp = ->
   d     = new Date()
   year  = d.getUTCFullYear()
   month = pad d.getUTCMonth() + 1
@@ -24,11 +24,11 @@ class Console extends winston.transports.Console
     options.timestamp ?= timestamp
     super options
 
-  formatMessage: (message) ->
+  formatMessage: (message, metadata) ->
     if @colorize
-      "\x1B[90m[#{message.module} #{message.method}]\x1B[39m #{message}"
+      "\x1B[90m[#{metadata._module} #{metadata._method}]\x1B[39m #{message}"
     else
-      "[#{message.module} #{message.method}] #{message}"
+      "[#{metadata._module} #{metadata._method}] #{message}"
 
   log: (level, message, metadata, callback) ->
     if typeof metadata == 'function'
@@ -37,7 +37,7 @@ class Console extends winston.transports.Console
     callback  ?= ->
     metadata  ?= {}
     err       = null
-    formatted = @formatMessage message
+    formatted = @formatMessage message, metadata
 
     if message instanceof Error
       [err, message] = [message, message.toString().replace /^Error: /, '']
