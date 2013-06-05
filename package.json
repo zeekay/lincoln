@@ -1,6 +1,6 @@
 {
   "name": "lincoln",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "presidential logging",
   "main": "lib/",
   "scripts": {
