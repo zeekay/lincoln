@@ -25,8 +25,7 @@ class Logger extends winston.Logger
       error: 3
 
     if options.souceMapSupport
-      require('source-map-support').install
-        handleUncaughtExceptions: false
+      require('source-map-support').install handleUncaughtExceptions: false
 
     super options
 
