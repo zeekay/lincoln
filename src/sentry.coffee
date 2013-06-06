@@ -13,6 +13,8 @@ class Sentry extends winston.Transport
     # needs to be null for traceback (dep of raw-trackback dep of raven)
     Error.prepareStackTrace = null
     {Client} = require 'raven'
+
+    # reinstall our prepareStacktrace
     require('./stacktrace').install()
 
     # monkey patch process/send so that we can massage kwargs sent back to sentry

@@ -1,12 +1,14 @@
-Console = require './console'
+Error._originalPrepareStackTrace = Error.prepareStackTrace
+
 Logger  = require './logger'
-Sentry  = require './sentry'
+Console = require './console'
 
-logger = new Logger
-logger.add Console, level: 'debug'
+defaultLogger = new Logger()
+defaultLogger.add Console, level: 'debug'
 
-logger.Console = Console
-logger.Logger  = Logger
-logger.Sentry  = Sentry
+defaultLogger.Logger     = Logger
+defaultLogger.Console    = Console
+defaultLogger.Sentry     = require './sentry'
+defaultLogger.stacktrace = require './stacktrace'
 
-module.exports = logger
+module.exports = defaultLogger

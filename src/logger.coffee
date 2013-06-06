@@ -2,6 +2,7 @@ winston = require 'winston'
 
 nodeEnv = process.env.NODE_ENV ? 'development'
 
+  # at Object.<anonymous> (/Users/zk/play/lincoln/test.coffee:19:11, <js>:18:9)
 methodRegex = /at (.*) \(/
 objectRegex = /^Object\.(module\.exports\.)?/
 moduleRegex = /(\w+)\.?(\w+)?:\d/
@@ -25,7 +26,7 @@ class Logger extends winston.Logger
       error: 3
 
     if options.souceMapSupport
-      require('source-map-support').install handleUncaughtExceptions: false
+      require('./stacktrace').install()
 
     super options
 
@@ -36,7 +37,9 @@ class Logger extends winston.Logger
     callback ?= ->
     metadata ?= {}
 
-    line = (new Error()).stack.split('\n')[3]
+    stack = (new Error()).stack.split('\n')
+    line = stack[3]
+    next = stack[4]
 
     if message instanceof Error
       error = message
@@ -46,11 +49,13 @@ class Logger extends winston.Logger
     Object.defineProperties metadata,
       _method:
         get: ->
-          (methodRegex.exec line)[1].replace objectRegex, ''
+          if (match = methodRegex.exec line) or (match = methodRegex.exec next)
+            match[1].replace objectRegex, ''
         enumerable: false
       _module:
         get: ->
-          (moduleRegex.exec line)[1]
+          if match = moduleRegex.exec line
+            match[1]
         enumerable: false
       _error:
         value: error
@@ -63,5 +68,9 @@ class Logger extends winston.Logger
       fn.call @ if env == nodeEnv
     else
       @configure k, v for k,v of env
+
+  patchGlobal: ->
+    process.on 'uncaughtException', (err) =>
+      @log 'error', err, -> process.exit 1
 
 module.exports = Logger
