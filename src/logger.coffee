@@ -37,13 +37,14 @@ class Logger extends winston.Logger
     callback ?= ->
     metadata ?= {}
 
-    stack = (new Error()).stack.split('\n')
-    line = stack[3]
-
     if message instanceof Error
       error = message
+      stack = error.stack
+      line = stack.split('\n')[1]
     else
       error = null
+      stack = (new Error()).stack
+      line = stack.split('\n')[3]
 
     Object.defineProperties metadata,
       _method:
