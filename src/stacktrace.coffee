@@ -2,7 +2,10 @@ path      = require 'path'
 sourceMap = require 'source-map-support'
 utils     = require './utils'
 
-cache = {}
+cache            = {}
+coffeePrepare    = Error._originalPrepareStackTrace
+coffeeDetected   = typeof coffeePrepare is 'function'
+coffeeStackRegex = /\n  at [^(]+ \((.*):(\d+):(\d+), <js>/
 
 mapSourcePosition = (frame) ->
   sourceMap.mapSourcePosition cache, frame
@@ -25,7 +28,21 @@ mapEvalOrigin = (origin) ->
   # Make sure we still return useful information if we didn't find anything
   origin
 
-wrapFrame = (frame) ->
+wrapFrame = (err, stack, frame) ->
+  # If using coffee 1.6.2+ executable we can derive source, line, and column
+  # from it's prepareStackTrace function
+  if coffeeDetected and match = coffeeStackRegex.exec coffeePrepare err, [frame]
+    return _frame =
+      __proto__: frame
+      getFileName: ->
+        match[1]
+      getLineNumber: ->
+        match[2]
+      getColumnNumber: ->
+        match[3] - 1
+      getScriptNameOrSourceURL: ->
+        match[1]
+
   # Most call sites will return the source file from getFileName(), but code
   # passed to eval() ending in "//@ sourceURL=..." will return the source file
   # from getScriptNameOrSourceURL() instead
@@ -60,12 +77,12 @@ wrapFrame = (frame) ->
   # If we get here then we were unable to change the source position
   frame
 
-structuredStackTrace = (stack) ->
+structuredStackTrace = (err, stack) ->
   cache = {}
 
   for _frame in stack
     # wrap each frame using source-map-support
-    frame = Object.create wrapFrame _frame
+    frame = Object.create wrapFrame err, stack, _frame
 
     frame['this']  = frame.getThis()
     frame.type     = frame.getTypeName()
@@ -90,8 +107,7 @@ module.exports =
   install: ->
     Error.prepareStackTrace = (err, stack) ->
       # sentry expects structuredStackTrace
-      err.structuredStackTrace = frames = structuredStackTrace stack
-
+      err.structuredStackTrace = frames = structuredStackTrace err, stack
       err + (frames.map (frame) -> '\n    at ' + frame).join ''
 
   mapEvalOrigin:        mapEvalOrigin

@@ -61,8 +61,7 @@ class Console extends winston.transports.Console
         column: match[3]
 
       data = fs.readFileSync position.source, 'utf8'
-      line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
-      if line
+      if line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
         console.error position.source + ':' + position.line
         console.error line
         console.error ((new Array(+position.column)).join ' ') + '^'
