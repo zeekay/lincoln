@@ -78,37 +78,38 @@ wrapFrame = (err, stack, frame) ->
   frame
 
 structuredStackTrace = (err, stack) ->
-  cache = {}
+  for frame in stack
+    _frame = Object.create {}, frame
 
-  for _frame in stack
-    # wrap each frame using source-map-support
-    frame = Object.create wrapFrame err, stack, _frame
-
-    frame['this']  = frame.getThis()
-    frame.type     = frame.getTypeName()
-    frame.isTop    = frame.isToplevel()
-    frame.isEval   = frame.isEval()
-    frame.origin   = frame.getEvalOrigin()
-    frame.script   = frame.getScriptNameOrSourceURL()
-    frame.fun      = frame.getFunction()
-    frame.name     = frame.getFunctionName()
-    frame.method   = frame.getMethodName()
-    frame.path     = frame.getFileName()
-    frame.line     = frame.getLineNumber()
-    frame.col      = frame.getColumnNumber()
-    frame.isNative = frame.isNative()
-    frame.pos      = frame.getPosition()
-    frame.isCtor   = frame.isConstructor()
-    frame.file     = path.basename frame.path
-    frame.toJSON   = utils.toJSON
-    frame
+    _frame['this']  = frame.getThis()
+    _frame.type     = frame.getTypeName()
+    _frame.isTop    = frame.isToplevel()
+    _frame.isEval   = frame.isEval()
+    _frame.origin   = frame.getEvalOrigin()
+    _frame.script   = frame.getScriptNameOrSourceURL()
+    _frame.fun      = frame.getFunction()
+    _frame.name     = frame.getFunctionName()
+    _frame.method   = frame.getMethodName()
+    _frame.path     = frame.getFileName()
+    _frame.line     = frame.getLineNumber()
+    _frame.col      = frame.getColumnNumber()
+    _frame.isNative = frame.isNative()
+    _frame.pos      = frame.getPosition()
+    _frame.isCtor   = frame.isConstructor()
+    _frame.file     = path.basename frame.path
+    _frame.toJSON   = utils.toJSON
+    _frame
 
 module.exports =
   install: ->
     Error.prepareStackTrace = (err, stack) ->
+      # rewrite callsites with source map info when possible
+      stack = for frame in stack
+        wrapFrame err, stack, frame
       # sentry expects structuredStackTrace
-      err.structuredStackTrace = frames = structuredStackTrace err, stack
-      err + (frames.map (frame) -> '\n    at ' + frame).join ''
+      err.structuredStackTrace = structuredStackTrace err, stack
+      # return formatted stacktrace
+      err + (stack.map (frame) -> '\n    at ' + frame).join ''
 
   mapEvalOrigin:        mapEvalOrigin
   mapSourcePosition:    mapSourcePosition

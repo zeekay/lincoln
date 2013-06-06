@@ -1,7 +1,6 @@
-fs      = require 'fs'
-winston = require 'winston'
-
-{mapSourcePosition} = require './stacktrace'
+fs         = require 'fs'
+winston    = require 'winston'
+stacktrace = require './stacktrace'
 
 pad = (n) ->
   n = n + ''
@@ -17,16 +16,16 @@ timestamp = ->
   sec   = pad d.getUTCSeconds()
   "#{year}-#{month}-#{date} #{hour}:#{min}:#{sec}"
 
-# at Object.<anonymous> (/Users/zk/play/lincoln/test.js:1:69)
 nodeStackRegex   = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/
-
-# at Object.<anonymous> (/Users/zk/play/lincoln/test.js:1:11, <js>:2:9)
 coffeeStackRegex = /\n  at [^(]+ \((.*):(\d+):(\d+), <js>/
 
 class Console extends winston.transports.Console
   constructor: (options = {}) ->
     options.colorize  ?= process.stdout.isTTY
     options.timestamp ?= timestamp
+
+    stacktrace.install()
+
     super options
 
   formatMessage: (message, metadata) ->
@@ -55,7 +54,7 @@ class Console extends winston.transports.Console
     match = coffeeStackRegex.exec err.stack unless match?
 
     if match? and fs.existsSync match[1]
-      position = mapSourcePosition
+      position = stacktrace.mapSourcePosition
         source: match[1]
         line:   match[2]
         column: match[3]

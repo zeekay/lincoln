@@ -39,7 +39,6 @@ class Logger extends winston.Logger
 
     stack = (new Error()).stack.split('\n')
     line = stack[3]
-    next = stack[4]
 
     if message instanceof Error
       error = message
@@ -49,7 +48,7 @@ class Logger extends winston.Logger
     Object.defineProperties metadata,
       _method:
         get: ->
-          if (match = methodRegex.exec line) or (match = methodRegex.exec next)
+          if match = methodRegex.exec line
             method = match[1].replace objectRegex, ''
             if constructorRegex.test method
               method = method.replace(constructorRegex, '') + '.constructor'
