@@ -1,10 +1,12 @@
+fs        = require 'fs'
 path      = require 'path'
 sourceMap = require 'source-map-support'
-utils     = require './utils'
 
 cache            = {}
 coffeePrepare    = Error._originalPrepareStackTrace
 coffeeDetected   = typeof coffeePrepare is 'function'
+
+nodeStackRegex   = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/
 coffeeStackRegex = /\n  at [^(]+ \((.*):(\d+):(\d+), <js>/
 
 mapSourcePosition = (frame) ->
@@ -77,6 +79,20 @@ wrapFrame = (err, stack, frame) ->
   # If we get here then we were unable to change the source position
   frame
 
+toJSON = ->
+  result = {}
+  Object.keys(@).forEach (key) =>
+    val = @[key]
+    if key is 'toJSON'
+      return
+    else if key is 'this'
+      result[key] = '' + val
+    else if typeof val is 'function'
+      result[key] = '' + val
+    else
+      result[key] = @[key]
+  result
+
 structuredStackTrace = (err, stack) ->
   for frame in stack
     _frame = Object.create {}, frame
@@ -97,8 +113,34 @@ structuredStackTrace = (err, stack) ->
     _frame.pos      = frame.getPosition()
     _frame.isCtor   = frame.isConstructor()
     _frame.file     = path.basename frame.path
-    _frame.toJSON   = utils.toJSON
+    _frame.toJSON   = toJSON
     _frame
+
+prettyPrint = (err, options) ->
+  options.colorize ?= false
+
+  match = nodeStackRegex.exec err.stack
+  match = coffeeStackRegex.exec err.stack unless match?
+
+  if match? and fs.existsSync match[1]
+    position = mapSourcePosition
+      source: match[1]
+      line:   match[2]
+      column: match[3]
+
+    data = fs.readFileSync position.source, 'utf8'
+    if line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
+      console.error position.source + ':' + position.line
+      console.error line
+
+      if options.colorize
+        caret = '\x1B[31m^\x1B[39m'
+      else
+        caret = '^'
+
+      console.error ((new Array(+position.column + 1)).join ' ') + caret
+
+  console.error err.stack
 
 module.exports =
   install: ->
@@ -115,3 +157,4 @@ module.exports =
   mapSourcePosition:    mapSourcePosition
   structuredStackTrace: structuredStackTrace
   wrapFrame:            wrapFrame
+  prettyPrint:          prettyPrint

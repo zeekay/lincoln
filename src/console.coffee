@@ -1,4 +1,3 @@
-fs         = require 'fs'
 winston    = require 'winston'
 stacktrace = require './stacktrace'
 
@@ -15,9 +14,6 @@ timestamp = ->
   min   = pad d.getUTCMinutes()
   sec   = pad d.getUTCSeconds()
   "#{year}-#{month}-#{date} #{hour}:#{min}:#{sec}"
-
-nodeStackRegex   = /\n    at [^(]+ \((.*):(\d+):(\d+)\)/
-coffeeStackRegex = /\n  at [^(]+ \((.*):(\d+):(\d+), <js>/
 
 class Console extends winston.transports.Console
   constructor: (options = {}) ->
@@ -43,28 +39,13 @@ class Console extends winston.transports.Console
     err       = metadata._error
 
     if err?
-      message = err.message
+      message = err.toString()
 
     formatted = @formatMessage message, metadata
     super level, formatted, metadata, callback
 
     return unless err? and err.stack
 
-    match = nodeStackRegex.exec err.stack
-    match = coffeeStackRegex.exec err.stack unless match?
-
-    if match? and fs.existsSync match[1]
-      position = stacktrace.mapSourcePosition
-        source: match[1]
-        line:   match[2]
-        column: match[3]
-
-      data = fs.readFileSync position.source, 'utf8'
-      if line = data.split(/(?:\r\n|\r|\n)/)[position.line - 1]
-        console.error position.source + ':' + position.line
-        console.error line
-        console.error ((new Array(+position.column)).join ' ') + '^'
-
-    console.error err.stack
+    stacktrace.prettyPrint err, colorize: @colorize
 
 module.exports = Console
