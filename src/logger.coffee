@@ -2,10 +2,10 @@ winston = require 'winston'
 
 nodeEnv = process.env.NODE_ENV ? 'development'
 
-  # at Object.<anonymous> (/Users/zk/play/lincoln/test.coffee:19:11, <js>:18:9)
-methodRegex = /at (.*) \(/
-objectRegex = /^Object\.(module\.exports\.)?/
-moduleRegex = /(\w+)\.?(\w+)?:\d/
+constructorRegex = /^new /
+methodRegex      = /at (.*) \(/
+moduleRegex      = /(\w+)\.?(\w+)?:\d/
+objectRegex      = /^Object\.(module\.exports\.)?/
 
 class Logger extends winston.Logger
   constructor: (options = {}) ->
@@ -50,7 +50,13 @@ class Logger extends winston.Logger
       _method:
         get: ->
           if (match = methodRegex.exec line) or (match = methodRegex.exec next)
-            match[1].replace objectRegex, ''
+            method = match[1].replace objectRegex, ''
+            if constructorRegex.test method
+              method = method.replace(constructorRegex, '') + '.constructor'
+            method
+          else
+            '<unknown>'
+
         enumerable: false
       _module:
         get: ->
