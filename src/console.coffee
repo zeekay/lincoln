@@ -31,9 +31,9 @@ class Console extends winston.transports.Console
 
   formatMessage: (message, metadata) ->
     if @colorize
-      "\x1B[90m[#{metadata._module} #{metadata._method}]\x1B[39m #{message}"
+      "\x1B[90m[#{metadata._module}.#{metadata._method}]\x1B[39m #{message}"
     else
-      "[#{metadata._module} #{metadata._method}] #{message}"
+      "[#{metadata._module}.#{metadata._method}] #{message}"
 
   log: (level, message, metadata, callback) ->
     if typeof metadata == 'function'
