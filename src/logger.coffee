@@ -11,7 +11,6 @@ class Logger extends winston.Logger
   constructor: (options = {}) ->
     options.exitOnError      ?= false
     options.transports       ?= []
-    options.sourceMapSupport ?= true
 
     options.colors ?=
       debug: 'blue'
@@ -24,9 +23,6 @@ class Logger extends winston.Logger
       info:  1
       warn:  2
       error: 3
-
-    if options.souceMapSupport
-      require('./stacktrace').install()
 
     super options
 

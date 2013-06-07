@@ -16,11 +16,12 @@
   "license": "BSD",
   "readmeFilename": "README.md",
   "dependencies": {
-    "source-map-support": "~0.1.5",
     "raven": "~0.5.1",
-    "winston": "~0.7.1"
+    "winston": "~0.7.1",
+    "postmortem": "~0.1.0"
   },
   "devDependencies": {
+    "source-map-support": "~0.1.5",
     "executive": "~0.3.0",
     "chai": "~1.6.0",
     "coffee-script": "~1.6.3",

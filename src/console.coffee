@@ -1,5 +1,5 @@
+postmortem = require 'postmortem'
 winston    = require 'winston'
-stacktrace = require './stacktrace'
 
 pad = (n) ->
   n = n + ''
@@ -20,7 +20,7 @@ class Console extends winston.transports.Console
     options.colorize  ?= process.stdout.isTTY
     options.timestamp ?= timestamp
 
-    stacktrace.install()
+    postmortem.install()
 
     super options
 
@@ -46,6 +46,6 @@ class Console extends winston.transports.Console
 
     return unless err? and err.stack
 
-    stacktrace.prettyPrint err, colorize: @colorize
+    postmortem.prettyPrint err, colorize: @colorize
 
 module.exports = Console

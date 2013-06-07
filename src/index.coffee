@@ -1,4 +1,4 @@
-Error._originalPrepareStackTrace = Error.prepareStackTrace
+require('postmortem').install()
 
 Logger  = require './logger'
 Console = require './console'
@@ -9,6 +9,5 @@ defaultLogger.add Console, level: 'debug'
 defaultLogger.Logger     = Logger
 defaultLogger.Console    = Console
 defaultLogger.Sentry     = require './sentry'
-defaultLogger.stacktrace = require './stacktrace'
 
 module.exports = defaultLogger
