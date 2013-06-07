@@ -1,4 +1,5 @@
-winston = require 'winston'
+postmortem = require 'postmortem'
+winston    = require 'winston'
 
 class Sentry extends winston.Transport
   constructor: (options) ->
@@ -14,8 +15,8 @@ class Sentry extends winston.Transport
     Error.prepareStackTrace = null
     {Client} = require 'raven'
 
-    # reinstall our prepareStacktrace
-    require('./stacktrace').install()
+    # reinstall our postmortem
+    postmortem.install()
 
     # monkey patch process/send so that we can massage kwargs sent back to sentry
     Client::_process = Client::process
