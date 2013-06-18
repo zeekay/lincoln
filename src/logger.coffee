@@ -32,6 +32,8 @@ class Logger extends winston.Logger
 
     callback ?= ->
     metadata ?= {}
+    if typeof metadata isnt 'object'
+      metadata = meta: metadata
 
     if message instanceof Error
       error = message
