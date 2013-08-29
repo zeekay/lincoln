@@ -28,16 +28,14 @@ class Logger extends winston.Logger
 
   # determine lowest logging level for early exit
   getMinLevel: ->
-    min = -1
+    min = 9999
     for k, v of @transports
       level = @levels[v.level]
-      min = level if level > min
+      min = level if level < min
     @minLevel = min
 
   log: (level, message, metadata, callback) ->
-    @getMinLevel() unless @minLevel?
-
-    return if @levels[level] < @minLevel
+    return if @levels[level] < (@minLevel ? @getMinLevel)
 
     if typeof metadata == 'function'
       [callback, metadata] = [metadata, {}]
