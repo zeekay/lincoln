@@ -9,8 +9,9 @@ objectRegex      = /^Object\.(module\.exports\.)?/
 
 class Logger extends winston.Logger
   constructor: (options = {}) ->
-    options.exitOnError      ?= false
-    options.transports       ?= []
+    options.exitOnError ?= false
+    options.transports  ?= []
+    @captureMethodName  = options.captureMethodName ? true
 
     options.colors ?=
       debug: 'blue'
@@ -45,6 +46,12 @@ class Logger extends winston.Logger
 
     if typeof metadata isnt 'object'
       metadata = meta: metadata
+
+    unless @captureMethodName
+      if message instanceof Error
+        metadata._error = message
+
+      return super level, message, metadata, callback
 
     if message instanceof Error
       error = message
