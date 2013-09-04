@@ -3,13 +3,13 @@ winston    = require 'winston'
 
 class Sentry extends winston.Transport
   constructor: (options) ->
-    @name   = 'sentry'
-    @level  = options.level ? 'info'
-
-    @_loggerName  = options.logger ? 'root'
-    @_versionApp  = options.appVersion
-    @_versionNode = process.version
-    @_versionOs   = 'v' + require('os').release()
+    @name             = 'sentry'
+    @level            = options.level ? 'info'
+    @_captureLocation = options.captureLocation ? true
+    @_loggerName      = options.logger ? 'root'
+    @_versionApp      = options.appVersion
+    @_versionNode     = process.version
+    @_versionOs       = 'v' + require('os').release()
 
     # needs to be null for traceback (dep of raw-trackback dep of raven)
     Error.prepareStackTrace = null
@@ -33,7 +33,8 @@ class Sentry extends winston.Transport
       ret
 
     @_client = new Client options.dsn
-    @_client.on 'error', (err) -> console.error err
+    @_client.on 'error', (err) ->
+      console.error err
 
   log: (level, message, metadata, callback) ->
     if typeof metadata == 'function'
@@ -50,14 +51,18 @@ class Sentry extends winston.Transport
         version_app:   @_versionApp
         version_node:  @_versionNode
         version_os:    @_versionOs
-      module:          metadata._module
-      method:          metadata._method
 
-    if (err = metadata._error)?
-      @_client.captureError err, kwargs
+    if @_captureLocation
+      utils.captureLocation message, metadata
+      kwargs.module = metadata.module
+      kwargs.method = metadata.method
+
+    if level == 'error'
+      @_client.captureError message, kwargs
     else
       @_client.captureMessage message, kwargs
 
-    @_client.once 'logged', -> callback null, true
+    @_client.once 'logged', ->
+      callback null, true
 
 module.exports = Sentry

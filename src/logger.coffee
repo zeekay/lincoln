@@ -2,16 +2,10 @@ winston = require 'winston'
 
 nodeEnv = process.env.NODE_ENV ? 'development'
 
-constructorRegex = /^new /
-methodRegex      = /at (.*) \(/
-moduleRegex      = /(\w+)\.?(\w+)?:\d/
-objectRegex      = /^Object\.(module\.exports\.)?/
-
 class Logger extends winston.Logger
   constructor: (options = {}) ->
     options.exitOnError ?= false
     options.transports  ?= []
-    @captureMethodName  = options.captureMethodName ? true
 
     options.colors ?=
       debug: 'blue'
@@ -27,61 +21,17 @@ class Logger extends winston.Logger
 
     super options
 
-  # determine lowest logging level for early exit
-  getMinLevel: ->
-    min = 9999
-    for k, v of @transports
-      level = @levels[v.level]
-      min = level if level < min
-    @minLevel = min
-
   log: (level, message, metadata, callback) ->
-    return if @levels[level] < (@minLevel ? @getMinLevel)
-
     if typeof metadata == 'function'
       [callback, metadata] = [metadata, {}]
 
     callback ?= ->
     metadata ?= {}
 
-    if typeof metadata isnt 'object'
-      metadata = meta: metadata
-
-    unless @captureMethodName
+    unless metadata.error?
       if message instanceof Error
-        metadata._error = message
-
-      return super level, message, metadata, callback
-
-    if message instanceof Error
-      error = message
-      stack = error.stack
-      line = stack.split('\n')[1]
-    else
-      error = null
-      stack = (new Error()).stack
-      line = stack.split('\n')[3]
-
-    Object.defineProperties metadata,
-      _method:
-        get: ->
-          if match = methodRegex.exec line
-            method = match[1].replace objectRegex, ''
-            if constructorRegex.test method
-              method = method.replace(constructorRegex, '') + '.constructor'
-            method
-          else
-            '<unknown>'
-
-        enumerable: false
-      _module:
-        get: ->
-          if match = moduleRegex.exec line
-            match[1]
-        enumerable: false
-      _error:
-        value: error
-        enumerable: false
+        metadata.error = message
+        message = message.toString()
 
     super level, message, metadata, callback
 
@@ -89,7 +39,7 @@ class Logger extends winston.Logger
     if typeof env is 'string'
       fn.call @ if env == nodeEnv
     else
-      @configure k, v for k,v of env
+      @configure k,v for k,v of env
 
   patchGlobal: ->
     process.on 'uncaughtException', (err) =>
