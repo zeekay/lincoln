@@ -1,5 +1,6 @@
 postmortem = require 'postmortem'
 winston    = require 'winston'
+utils      = require './utils'
 
 pad = (n) ->
   n = n + ''
@@ -19,33 +20,36 @@ class Console extends winston.transports.Console
   constructor: (options = {}) ->
     options.colorize  ?= process.stdout.isTTY
     options.timestamp ?= timestamp
+    @_captureLocation  = options.captureLocation ? true
 
     postmortem.install()
 
     super options
 
-  formatMessage: (message, metadata) ->
-    if @colorize
-      "\x1B[90m[#{metadata._module}.#{metadata._method}]\x1B[39m #{message}"
+  _formatMessage: (message, metadata, prefix='') ->
+    if metadata.module and metadata.method
+      prefix = "[#{metadata.module}.#{metadata.method}]"
     else
-      "[#{metadata._module}.#{metadata._method}] #{message}"
+      return message
+
+    if @colorize
+      "\x1B[90m#{prefix}\x1B[39m #{message}"
+    else
+      "#{prefix} #{message}"
 
   log: (level, message, metadata, callback) ->
     if typeof metadata == 'function'
       [callback, metadata] = [metadata, {}]
 
-    callback  ?= ->
-    metadata  ?= {}
-    err       = metadata._error
+    callback ?= ->
+    metadata ?= {}
 
-    if err?
-      message = err.toString()
+    utils.captureLocation message, metadata
+    formatted = @_formatMessage message, metadata
 
-    formatted = @formatMessage message, metadata
     super level, formatted, metadata, callback
 
-    return unless err? and err.stack
-
-    postmortem.prettyPrint err, colorize: @colorize
+    if metadata.error? and metadata.error.stack
+      postmortem.prettyPrint metadata.error, colorize: @colorize
 
 module.exports = Console
