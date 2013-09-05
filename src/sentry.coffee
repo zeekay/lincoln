@@ -1,5 +1,6 @@
 postmortem = require 'postmortem'
 winston    = require 'winston'
+utils      = require './utils'
 
 class Sentry extends winston.Transport
   constructor: (options) ->
