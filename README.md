@@ -1,3 +1,3 @@
-# lincoln
-
-...logs.
+## lincoln
+#### Presidential logging.
+Fancy loggers for winston.
