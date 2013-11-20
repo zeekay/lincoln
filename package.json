@@ -1,7 +1,13 @@
 {
   "name": "lincoln",
   "version": "0.1.17",
-  "description": "Presidential logging.",
+  "description": "Presidential logging. Fancy loggers for winston",
+  "keywords": [
+    "log",
+    "loggers",
+    "logging",
+    "winston"
+  ],
   "main": "lib/",
   "scripts": {
     "prepublish": "cake build:prepublish",
