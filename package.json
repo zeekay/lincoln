@@ -1,17 +1,21 @@
 {
   "name": "lincoln",
   "version": "0.1.16",
-  "description": "presidential logging",
+  "description": "Presidential logging.",
   "main": "lib/",
   "scripts": {
     "prepublish": "cake build:prepublish",
     "test": "cake test"
   },
+  "homepage": "https://github.com/zeekay/lincoln",
   "repository": "https://github.com/zeekay/lincoln",
+  "bugs": {
+    "url": "https://github.com/zeekay/lincoln/issues"
+  },
   "author": {
     "name": "Zach Kelling",
     "email": "zk@monoid.io",
-    "url": "https://whatit.is"
+    "url": "http://zeekay.io"
   },
   "license": "BSD",
   "readmeFilename": "README.md",
