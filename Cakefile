@@ -39,11 +39,11 @@ task 'gh-pages', 'Publish docs to gh-pages', ->
   brief = require 'brief'
   brief.update()
 
-task 'publish', 'publish project', (options) ->
-  newVersion = options.version ? 'patch'
+task 'publish', 'Publish project', ->
+  exec ['git push', 'npm publish'], (err) ->
+    return if err?
 
-  exec """
-  git push
-  npm version #{newVersion}
-  npm publish
-  """.split '\n'
+    console.log()
+
+    invoke 'gh-pages'
+
