@@ -1,6 +1,6 @@
 {
   "name": "lincoln",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Presidential logging. Fancy loggers for winston.",
   "keywords": [
     "log",
