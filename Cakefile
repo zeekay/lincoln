@@ -35,15 +35,5 @@ task 'test', 'run tests', (options) ->
   #{grep}
   #{test}"
 
-task 'gh-pages', 'Publish docs to gh-pages', ->
-  brief = require 'brief'
-  brief.update()
-
 task 'publish', 'Publish project', ->
-  exec ['git push', 'npm publish'], (err) ->
-    return if err?
-
-    console.log()
-
-    invoke 'gh-pages'
-
+  exec ['git push --follow-tags', 'npm publish']
