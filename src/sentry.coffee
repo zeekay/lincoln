@@ -1,23 +1,22 @@
-postmortem = require 'postmortem'
-winston    = require 'winston'
-utils      = require './utils'
+winston = require 'winston'
 
-class Sentry extends winston.Transport
-  constructor: (options) ->
-    @name             = 'sentry'
-    @level            = options.level ? 'info'
-    @_captureLocation = options.captureLocation ? true
-    @_loggerName      = options.logger ? 'root'
-    @_versionApp      = options.appVersion
-    @_versionNode     = process.version
-    @_versionOs       = 'v' + require('os').release()
 
-    # needs to be null for traceback (dep of raw-trackback dep of raven)
+getClient = do ->
+  Client = null  # cached Client constructor
+
+  ->
+    return Client if Client?  # reuse cached Client if possible
+
+    # save reference to current prepareStackTrace
+    prepareStackTrace = Error.prepareStackTrace
+    # prepareStackTrace needs to be null for traceback (dep of raw-trackback dep of raven)
     Error.prepareStackTrace = null
+
+    # require raven
     {Client} = require 'raven'
 
-    # reinstall our postmortem
-    postmortem.install()
+    # set back proper prepareStackTrace
+    Error.prepareStackTrace = prepareStackTrace
 
     # monkey patch process/send so that we can massage kwargs sent back to sentry
     Client::_process = Client::process
@@ -25,13 +24,34 @@ class Sentry extends winston.Transport
 
     Client::send = (kwargs) -> # noop
     Client::process = (kwargs) ->
+      # get return of real process
       ret = @_process kwargs
 
       # try to get set culprit to module + function/method throwing error
-      kwargs.culprit = "#{kwargs.module}.#{kwargs.method}"
+      if kwargs.module? and kargs.method?
+        kwargs.culprit = "#{kwargs.module}.#{kwargs.method}"
 
+      # send to sentry
       @_send kwargs
       ret
+
+    # return our bastardized client
+    Client
+
+
+class Sentry extends winston.Transport
+  constructor: (options) ->
+    @name             = 'sentry'
+    @level            = options.level ? 'info'
+    @_loggerName      = options.logger ? 'root'
+    @_versionApp      = options.appVersion
+    @_versionNode     = process.version
+    @_versionOs       = 'v' + require('os').release()
+
+    Client = getClient()
+
+    unless options.dsn?
+      throw new Error 'Sentry DSN must be declared'
 
     @_client = new Client options.dsn
     @_client.on 'error', (err) ->
@@ -53,8 +73,7 @@ class Sentry extends winston.Transport
         version_node:  @_versionNode
         version_os:    @_versionOs
 
-    if @_captureLocation
-      utils.captureLocation message, metadata
+    if metadata.module? and metadata.method?
       kwargs.module = metadata.module
       kwargs.method = metadata.method
 

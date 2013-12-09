@@ -7,7 +7,6 @@ exports.captureLocation = (message, metadata) ->
   return if metadata.method or metadata.module
 
   if message instanceof Error
-    console.log 'instance'
     stack = error.stack
     line = stack.split('\n')[1]
   else
@@ -28,3 +27,17 @@ exports.captureLocation = (message, metadata) ->
 
   metadata.method = method
   metadata.module = module
+
+exports.pad = pad = (n) ->
+  n = n + ''
+  if n.length >= 2 then n else new Array(2 - n.length + 1).join('0') + n
+
+exports.timestamp = ->
+  d     = new Date()
+  year  = d.getUTCFullYear()
+  month = pad d.getUTCMonth() + 1
+  date  = pad d.getUTCDate()
+  hour  = pad d.getUTCHours()
+  min   = pad d.getUTCMinutes()
+  sec   = pad d.getUTCSeconds()
+  "#{year}-#{month}-#{date} #{hour}:#{min}:#{sec}"

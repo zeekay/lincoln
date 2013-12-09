@@ -1,6 +1,7 @@
-winston = require 'winston'
+winston    = require 'winston'
+postmortem = require 'postmortem'
+utils      = require './utils'
 
-nodeEnv = process.env.NODE_ENV ? 'development'
 
 class Logger extends winston.Logger
   constructor: (options = {}) ->
@@ -19,6 +20,11 @@ class Logger extends winston.Logger
       warn:  2
       error: 3
 
+    @_nodeEnv = process.env.NODE_ENV ? 'development'
+    @_captureLocation = options.captureLocation ? true
+
+    postmortem.install()
+
     super options
 
   log: (level, message, metadata, callback) ->
@@ -27,6 +33,10 @@ class Logger extends winston.Logger
 
     callback ?= ->
     metadata ?= {}
+
+    # try to capture location of logging call
+    if @_captureLocation
+      utils.captureLocation message, metadata
 
     unless metadata.error?
       if message instanceof Error
@@ -37,7 +47,7 @@ class Logger extends winston.Logger
 
   configure: (env, fn) ->
     if typeof env is 'string'
-      fn.call @ if env == nodeEnv
+      fn.call @ if env == @_nodeEnv
     else
       @configure k,v for k,v of env
 
