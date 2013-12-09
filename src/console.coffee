@@ -2,35 +2,22 @@ postmortem = require 'postmortem'
 winston    = require 'winston'
 utils      = require './utils'
 
-pad = (n) ->
-  n = n + ''
-  if n.length >= 2 then n else new Array(2 - n.length + 1).join('0') + n
-
-timestamp = ->
-  d     = new Date()
-  year  = d.getUTCFullYear()
-  month = pad d.getUTCMonth() + 1
-  date  = pad d.getUTCDate()
-  hour  = pad d.getUTCHours()
-  min   = pad d.getUTCMinutes()
-  sec   = pad d.getUTCSeconds()
-  "#{year}-#{month}-#{date} #{hour}:#{min}:#{sec}"
 
 class Console extends winston.transports.Console
   constructor: (options = {}) ->
     options.colorize  ?= process.stdout.isTTY
-    options.timestamp ?= timestamp
-    @_captureLocation  = options.captureLocation ? true
-
-    postmortem.install()
-
+    options.timestamp ?= utils.timestamp
     super options
 
-  _formatMessage: (message, metadata, prefix='') ->
-    if metadata.module and metadata.method
-      prefix = "[#{metadata.module}.#{metadata.method}]"
-    else
+  _formatMessage: (message, metadata) ->
+    unless (metadata.module and metadata.method)
       return message
+
+    prefix = "[#{metadata.module}.#{metadata.method}]"
+
+    # remove from metadata object
+    delete metadata.module
+    delete metadata.method
 
     if @colorize
       "\x1B[90m#{prefix}\x1B[39m #{message}"
@@ -44,7 +31,6 @@ class Console extends winston.transports.Console
     callback ?= ->
     metadata ?= {}
 
-    utils.captureLocation message, metadata
     formatted = @_formatMessage message, metadata
 
     super level, formatted, metadata, callback
