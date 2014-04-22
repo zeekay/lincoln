@@ -10,7 +10,7 @@
   ],
   "main": "lib/",
   "scripts": {
-    "prepublish": "cake build:prepublish",
+    "prepublish": "cake build",
     "test": "cake test"
   },
   "homepage": "https://github.com/zeekay/lincoln",
