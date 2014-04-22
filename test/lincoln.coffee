@@ -1,14 +1,14 @@
 lincoln = require '../lib'
 
 testInfo = ->
-    lincoln.info 'test'
+  lincoln.info 'test'
 
 testError = ->
-    lincoln.error (new Error 'eep')
+  lincoln.error (new Error 'eep')
 
 describe 'lincoln', ->
   it 'default logger should log to console', ->
     testInfo()
 
-  it 'default logger should log to console and show stack trace', ->
+  it.skip 'default logger should log to console and show stack trace', ->
     testError()
