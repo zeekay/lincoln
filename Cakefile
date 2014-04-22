@@ -25,15 +25,14 @@ task 'test', 'run tests', (options) ->
   else
     grep = ''
 
-  exec "NODE_ENV=test ./node_modules/.bin/mocha
-  --colors
-  --compilers coffee:coffee-script
-  --recursive
-  --reporter spec
-  --require test/_helper.js
-  --timeout 5000
-  #{grep}
-  #{test}"
+  exec "NODE_ENV=test node_modules/.bin/mocha
+        --colors
+        --reporter spec
+        --timeout 5000
+        --compilers coffee:coffee-script/register
+        --require postmortem/register
+        #{grep}
+        #{test}"
 
 task 'publish', 'Publish project', ->
   exec ['git push --follow-tags', 'npm publish']
